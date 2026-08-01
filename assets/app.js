@@ -64,11 +64,20 @@ function heroStackTick() {
     const host = $('#heroStack');
     const imgs = $$('img', host);
     const n = Math.max(imgs.length - 1, 1);
-    // gentler than section 04's stage: this panel is small, so a hard yaw clips the outer sheets and the
-    // figure stops being readable as a character
-    const yaw = -13 + Math.sin(HERO.stackPhase) * 9;
-    imgs.forEach((im, k) => { im.style.transform = `translateZ(${((k - n / 2) * 22).toFixed(1)}px)`; });
-    host.style.transform = `rotateY(${yaw.toFixed(2)}deg) rotateX(2.5deg)`;
+    /* A wider yaw sweep, and the stack BREATHES apart and back together.
+     *
+     * A narrow oscillation reads as a wobble rather than as depth. Sweeping 34 degrees makes the sheets
+     * pass each other so the ordering is legible, and modulating the Z gap on a slower cycle shows the
+     * stack assembling into the character and coming apart again -- which is the thing this panel is
+     * meant to say, next to the clip that shows it moving.
+     *
+     * The two cycles are deliberately incommensurate (1 : 0.37) so the motion never settles into an
+     * obvious repeat. */
+    const yaw = -14 + Math.sin(HERO.stackPhase) * 17;
+    const breathe = 0.42 + 0.58 * (0.5 - 0.5 * Math.cos(HERO.stackPhase * 0.37));
+    const gap = 30 * breathe;
+    imgs.forEach((im, k) => { im.style.transform = `translateZ(${((k - n / 2) * gap).toFixed(1)}px)`; });
+    host.style.transform = `rotateY(${yaw.toFixed(2)}deg) rotateX(${(3 - breathe).toFixed(2)}deg)`;
   }
   requestAnimationFrame(heroStackTick);
 }
@@ -1023,19 +1032,60 @@ function buildExplode() {
 
 /* ------------------------------------------------------------------ comparison */
 /* ------------------------------------------------------------------ editing */
+/* The re-texture pair ANIMATES, both sides in lockstep.
+ *
+ * The claim here is that the edited rig replays the ORIGINAL predicted displacement frames -- the mesh and
+ * every keypose are byte-identical between the two rigs, only the layer RGB changed. Three stills rotating
+ * cannot show that; two clips running the same axis in step can, because any divergence would be visible
+ * immediately. Same shared crop box, same amplitudes, and a watchdog re-seeds the right from the left. */
 function buildEdit() {
-  if (!D.edit || !D.edit.poses) return;
+  if (!D.edit) return;
+  const clips = D.edit.clips;
+  const vb = $('#edVidBefore'), va = $('#edVidAfter');
+  if (clips && vb && va) {
+    vb.src = `editloops/${clips.before.f}`;
+    va.src = `editloops/${clips.after.f}`;
+    [vb, va].forEach(v => { v.style.display = ''; });
+    $('#edBefore').style.display = 'none';
+    $('#edAfter').style.display = 'none';
+    const obs = new IntersectionObserver(es => es.forEach(e => {
+      [vb, va].forEach(v => {
+        if (e.isIntersecting) { if (v.preload === 'none') v.preload = 'auto'; v.play().catch(() => {}); }
+        else v.pause();
+      });
+    }), { rootMargin: '180px' });
+    obs.observe(vb.parentElement);
+    setInterval(() => {
+      if (vb.paused || va.paused || !isFinite(vb.duration)) return;
+      if (Math.abs(vb.currentTime - va.currentTime) > 0.06) va.currentTime = vb.currentTime;
+    }, 1000);
+  }
+  // the pose buttons remain, and switching to one hands control back to the stills
   const sel = $('#edPoses');
+  if (!sel || !D.edit.poses) return;
   D.edit.poses.forEach((p, i) => {
-    const b = el('button', 'btn' + (i === 0 ? ' on' : ''), p);
+    const b = el('button', 'btn', p);
     b.onclick = () => {
       $$('.btn', sel).forEach(x => x.classList.remove('on')); b.classList.add('on');
       const t = p.replace(/ /g, '');
-      $('#edBefore').src = `edit/before_${t}.webp`;
-      $('#edAfter').src = `edit/after_${t}.webp`;
+      if (vb && va) { vb.pause(); va.pause(); vb.style.display = 'none'; va.style.display = 'none'; }
+      const ib = $('#edBefore'), ia = $('#edAfter');
+      ib.style.display = ''; ia.style.display = '';
+      ib.src = `edit/before_${t}.webp`;
+      ia.src = `edit/after_${t}.webp`;
     };
     sel.appendChild(b);
   });
+  const play = el('button', 'btn on', 'play both');
+  play.onclick = () => {
+    $$('.btn', sel).forEach(x => x.classList.remove('on')); play.classList.add('on');
+    if (!vb || !va) return;
+    $('#edBefore').style.display = 'none'; $('#edAfter').style.display = 'none';
+    vb.style.display = ''; va.style.display = '';
+    va.currentTime = vb.currentTime;
+    vb.play().catch(() => {}); va.play().catch(() => {});
+  };
+  sel.insertBefore(play, sel.firstChild);
 }
 
 /* ------------------------------------------------------------------ gallery */
@@ -1190,7 +1240,6 @@ function buildRotations() {
   // 04 Stage-1 cases: fourteen. The exploded stack turns on its own, so this only changes character.
   autoRotate('#exlPick', 7000, null, '#exlStage');
   // 06 re-texture: the pose row
-  autoRotate('#edPoses', 3200, null, null);
   // 01 the explorer's own walk through all 276 animations starts by itself
   if (typeof carSet === 'function' && D.loops) carSet(true);
 }

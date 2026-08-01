@@ -4930,7 +4930,19 @@ window.DATA = {
    "body -10",
    "tilt +30"
   ],
-  "note": "the mesh and every predicted displacement frame are byte-identical between the two rigs; only layer RGB changed"
+  "note": "the mesh and every predicted displacement frame are byte-identical between the two rigs; only layer RGB changed",
+  "clips": {
+   "before": {
+    "f": "before.mp4",
+    "n": 40,
+    "fps": 24
+   },
+   "after": {
+    "f": "after.mp4",
+    "n": 40,
+    "fps": 24
+   }
+  }
  },
  "layers": [
   {
