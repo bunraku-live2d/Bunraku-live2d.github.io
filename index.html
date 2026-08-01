@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bunraku — Turning a Single Illustration into an Editable Live2D Character</title>
+<meta name="description" content="Bunraku turns a single flat illustration into an editable, drivable Live2D character: an ordered stack of completed RGBA layers, a mesh per layer, and a predicted 2D displacement for every vertex of every layer in one forward pass.">
+<meta name="theme-color" content="#1f6fb2">
+<meta name="color-scheme" content="light">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://bunraku-live2d.github.io/">
+<link rel="canonical" href="https://bunraku-live2d.github.io/">
+<meta property="og:title" content="Bunraku — Turning a Single Illustration into an Editable Live2D Character">
+<meta property="og:description" content="Bunraku turns a single flat illustration into an editable, drivable Live2D character: an ordered stack of completed RGBA layers, a mesh per layer, and a predicted 2D displacement for every vertex of every layer in one forward pass.">
+<meta property="og:image" content="https://bunraku-live2d.github.io/assets/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Bunraku — Turning a Single Illustration into an Editable Live2D Character">
+<meta name="twitter:description" content="Bunraku turns a single flat illustration into an editable, drivable Live2D character: an ordered stack of completed RGBA layers, a mesh per layer, and a predicted 2D displacement for every vertex of every layer in one forward pass.">
+<meta name="twitter:image" content="https://bunraku-live2d.github.io/assets/og.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http%3A//www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231f6fb2'/%3E%3Ctext x='32' y='45' font-size='38' font-family='Georgia,serif' fill='white' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<span id="top"></span>
+
+<nav class="nav" id="nav">
+  <div class="wrap navin">
+    <a class="brand" href="#top">
+      <span class="glyph" aria-hidden="true">B</span>
+      <span class="bt">Bunraku</span>
+    </a>
+    <div class="navlinks">
+      <a class="nb" href="https://arxiv.org/abs/2607.27348" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l6 6v14H6z" fill="none"
+          stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v6h6" fill="none"
+          stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>arXiv</a>
+      <a class="nb" href="https://github.com/SparcAI-Inc/Bunraku" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.48 2 2 6.58 2
+          12.23c0 4.51 2.87 8.34 6.84 9.69.5.09.68-.22.68-.49v-1.7c-2.78.62-3.37-1.37-3.37-1.37-.45-1.18
+          -1.11-1.5-1.11-1.5-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09
+          -.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.05 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.7
+          0 0 .84-.27 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.32 2.75-1.05 2.75-1.05.55 1.4.2 2.44.1 2.7.64.72
+          1.03 1.63 1.03 2.75 0 3.92-2.34 4.78-4.57 5.04.36.32.68.94.68 1.9v2.82c0 .27.18.58.69.48A10.02
+          10.02 0 0 0 22 12.23C22 6.58 17.52 2 12 2z"/></svg>Code</a>
+    </div>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap hero">
+    <div class="heroText">
+      <p class="eyebrow">Single illustration &rarr; editable, drivable Live2D character</p>
+      <h1><span class="mark">Bunraku</span><span class="tail">Turning a Single Illustration into an
+        Editable Live2D Character</span></h1>
+
+      <p class="authors">
+        <span class="au">Junhao Chen<sup>&#9733;1</sup></span>
+        <span class="au">Jingjia Mao<sup>&#9733;1</sup></span>
+        <span class="au">Dayong Li<sup>2</sup></span>
+        <span class="au">Chenghai Li<sup>2</sup></span>
+        <span class="au">Saining Zhang<sup>3</sup></span>
+        <span class="au">Zhihao Li<sup>4</sup></span>
+        <span class="au">Hao Zhao<sup>1</sup></span>
+        <span class="au">Yufei Wang<sup>&dagger;4</sup></span>
+        <span class="au">Ruqi Huang<sup>&dagger;1</sup></span>
+      </p>
+      <p class="affil">
+        <span><sup>1</sup>Tsinghua University, China</span>
+        <span><sup>2</sup>Independent, Beijing, China</span>
+        <span><sup>3</sup>Nanyang Technological University, Singapore</span>
+        <span><sup>4</sup>SparcAI Inc., USA</span>
+      </p>
+      <p class="anote"><sup>&#9733;</sup>Equal contribution &nbsp;&middot;&nbsp;
+        <sup>&dagger;</sup>Corresponding authors</p>
+
+      <div class="links">
+        <a class="lk pri" href="https://arxiv.org/abs/2607.27348" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l6 6v14H6z" fill="none"
+            stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 2v6h6"
+            fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path
+            d="M9 13h6M9 17h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Paper <span class="sub2">arXiv:2607.27348</span></a>
+        <a class="lk" href="https://github.com/SparcAI-Inc/Bunraku" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.48 2 2 6.58
+            2 12.23c0 4.51 2.87 8.34 6.84 9.69.5.09.68-.22.68-.49v-1.7c-2.78.62-3.37-1.37-3.37-1.37-.45
+            -1.18-1.11-1.5-1.11-1.5-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11
+            2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.05 0-1.12.39-2.03 1.03-2.75-.1
+            -.26-.45-1.3.1-2.700 0 0 .84-.27 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.32 2.75-1.05 2.75-1.05.55
+            1.4.2 2.44.1 2.7.64.72 1.03 1.63 1.03 2.75 0 3.92-2.34 4.78-4.57 5.04.36.32.68.94.68
+            1.9v2.82c0 .27.18.58.69.48A10.02 10.02 0 0 0 22 12.23C22 6.58 17.52 2 12 2z"/></svg>
+          Code <span class="sub2">GitHub</span></a>
+      </div>
+
+      <div class="badges">
+        <span class="badge"><span id="nchar">&mdash;</span> characters</span>
+        <span class="badge"><span id="nexp">&mdash;</span> interactive rigs</span>
+        <span class="badge">one frozen checkpoint</span>
+        <span class="badge">no teacher forcing</span>
+        <span class="badge">every frame is raw model output</span>
+      </div>
+    </div>
+
+    <div class="heroArt" id="heroArt" aria-label="a generated rig, animating">
+      <div class="heroGlow"></div>
+      <div class="heroVids" id="heroVids"></div>
+      <div class="heroStack" id="heroStack" aria-hidden="true"></div>
+      <span class="heroTag" id="heroTag"></span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <p class="note"><b>How to read this page.</b> Every frame is raw model output &mdash; no per-example
+    tuning, no hand editing, no cherry-picked frames. The frames were rendered ahead of time by the same
+    WebGL viewer used for every figure in the paper, each one driven to an <em>absolute</em> parameter
+    value, so dragging a slider steps through what the Live2D runtime actually interpolates between the
+    predicted keyposes rather than a tween invented for this page.</p>
+  </div>
+</header>
+
+<!-- ============================================================ 1. explorer -->
+<section>
+  <div class="wrap">
+    <h2><span class="n">01</span>Drive a generated rig</h2>
+    <p class="lede">These four are looping right now, each on its strongest axis. Click one to open it
+    below, or switch between the two input groups &mdash; <b>A-pose</b> standing figures and
+    <b>dynamic</b> illustrations &mdash; and drag any of them. <b>Play all</b> walks every rig and every
+    axis in turn, 72 animations, without you clicking anything; moving the pointer across the character
+    takes over and scrubs it by hand. Each rig was produced from one
+    flat illustration: Stage&nbsp;1 splits it into an ordered RGBA layer stack with the hidden regions
+    completed, Stage&nbsp;2 builds a triangle mesh per layer from its alpha channel and predicts a 2D
+    displacement for every vertex of every layer in a single forward pass.</p>
+
+    <div class="feat" id="featStrip" aria-label="four rigs animating"></div>
+
+    <div class="explorer">
+      <div class="axes grp" id="exGrp" role="tablist" aria-label="input group"
+           style="margin:0 0 10px"></div>
+      <div class="picker" id="exPicker" role="tablist" aria-label="characters"></div>
+      <div class="stage">
+        <div class="viewport react" id="exStage">
+          <span class="tag" id="exTag"></span>
+          <video id="exVid" loop muted playsinline preload="auto"
+                 aria-label="generated rig at the selected parameter value"></video>
+          <!-- second decoder: assigning src to the visible element tears its pipeline down and it paints
+               empty for a beat, which showed as a flash on every carousel step. Two decoders make the
+               swap atomic. See exPlay() in app.js. -->
+          <video id="exVid2" loop muted playsinline preload="auto" style="display:none"></video>
+        </div>
+        <div class="ctl">
+          <div class="axes" id="exAxes" role="tablist" aria-label="animation axis"></div>
+          <div class="cur" id="exCur">0</div>
+          <div class="curlab" id="exCurLab"></div>
+          <label class="sl" for="exRange">parameter value</label>
+          <input type="range" id="exRange" min="0" max="8" value="4" step="1"
+                 aria-label="parameter value">
+          <div class="vals"><span>min</span><span>rest</span><span>max</span></div>
+          <div class="row" style="margin-top:14px">
+            <button class="btn" id="exPlay">play</button>
+            <button class="btn" id="exRest">rest</button>
+            <button class="btn" id="carBtn">play all</button>
+            <span class="badge" id="carCount"></span>
+          </div>
+          <div class="facts" id="exFacts"></div>
+          <div class="facts" style="border-top:0;padding-top:8px">
+            arrow keys also step the slider &middot; moving the pointer across the
+            character scrubs the axis
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ A-pose group -->
+<section id="aposeSection">
+  <div class="wrap">
+    <h2><span class="n">02</span>The easy case: A-pose inputs</h2>
+    <p class="lede">A standing, front-facing figure with the arms down and clear of the body is the pose
+    almost every hand-authored Live2D rig is drawn in, so it is the pose our training distribution is
+    centred on. Every rig below is of that kind, animating at full amplitude with nothing scaled down.
+    They loop on their own and rotate through the three axes; move the pointer across any tile to drive
+    that axis by hand, and click to open it in the explorer above.</p>
+
+    <div class="apgrid" id="apGrid" aria-label="A-pose rigs animating"></div>
+
+    <p class="note" id="apNote"></p>
+  </div>
+</section>
+
+<!-- ============================================================ cursor tracking -->
+<section id="trackSection">
+  <div class="wrap">
+    <h2><span class="n">03</span>Move your mouse &mdash; it looks at you</h2>
+    <p class="lede">Move the pointer anywhere over the panel. The head turns and nods toward it and both
+    eyes track it &mdash; <strong>four parameters driven at once</strong>. Each frame you see is one real
+    render of the rig at that four-parameter pose, not a warp of a single image: the Live2D runtime
+    resolves a simultaneous drive by <em>summing</em> the stored per-parameter displacement fields, so a
+    four-parameter pose costs no extra prediction. We first drove six, adding a tilt coupling and a body
+    lean at full range, and summing that many predicted fields pulled the layers apart &mdash; the note
+    below section&nbsp;02 is the same amplitude limit seen from the other side.</p>
+    <div class="track">
+      <div class="trstage" id="trStage">
+        <div class="stack">
+          <img id="trA" alt="the rig looking toward the pointer">
+          <img id="trB" class="ov" alt="">
+          <img id="trC" class="ov" alt="">
+          <img id="trD" class="ov" alt="">
+        </div>
+        <span class="hint"><span class="cur"></span>move your pointer onto the character &mdash;
+          it follows you</span>
+      </div>
+      <div class="ctl">
+        <div class="axes" id="trPick" role="tablist" aria-label="character"></div>
+        <label class="sl">parameters being driven</label>
+        <div class="facts" id="trRead" style="border-top:0;padding-top:0;margin-top:0"></div>
+        <div class="facts" id="trFacts"></div>
+        <div class="facts" style="border-top:0;padding-top:8px">
+          leaving the panel eases back to rest
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 2. layer peel -->
+<section>
+  <div class="wrap">
+    <h2><span class="n">04</span>What Stage&nbsp;1 produces</h2>
+    <p class="lede">The rig is an <em>ordered</em> stack of RGBA layers, and each layer is complete: the
+    part of it that a layer above hides still has to be painted, because the moment the character moves
+    that region becomes visible. The stack below is fanned apart in depth and turning on its own &mdash;
+    drag across it to pull it further apart, and pick any of the cases to switch character. Below that,
+    drag to add one layer at a time, back to front, with the layer being added shown alone.</p>
+
+    <div class="explode">
+      <div class="exstage" id="exlStage" aria-label="the layer stack, fanned apart">
+        <div class="exlayers" id="exlLayers"></div>
+        <span class="exlab" id="exlLab"></span>
+      </div>
+      <div class="ctl">
+        <div class="axes" id="exlPick" role="tablist" aria-label="character"></div>
+        <label class="sl" for="exlRange">pull the stack apart</label>
+        <input type="range" id="exlRange" min="0" max="1" step="any" value="0.55"
+               aria-label="explode amount">
+        <div class="row" style="margin-top:12px">
+          <button class="btn on" id="exlPlay">pause</button>
+          <button class="btn" id="exlSpin">spin</button>
+        </div>
+        <div class="facts" id="exlFacts"></div>
+        <div class="facts" style="border-top:0;padding-top:8px">
+          every sheet is one predicted layer, complete &mdash; including the region that was hidden
+          behind another layer in the flat illustration
+        </div>
+      </div>
+    </div>
+
+    <div class="peel" style="margin-top:26px">
+      <div class="box">
+        <div class="cap">composited, back to front</div>
+        <img id="plCum" alt="layer stack composited up to the selected layer">
+      </div>
+      <div class="box">
+        <div class="cap">this layer alone, completed</div>
+        <img id="plSolo" alt="the selected layer on its own">
+      </div>
+      <div class="ctl">
+        <div class="axes" id="plPick" role="tablist" aria-label="character"></div>
+        <label class="sl" for="plRange">layers shown</label>
+        <input type="range" id="plRange" min="0" max="20" value="0" step="1" aria-label="layers shown">
+        <div class="facts" id="plCount"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ 3. comparison -->
+<section>
+  <div class="wrap">
+    <h2><span class="n">05</span>Why not just use a human parser?</h2>
+    <p class="lede">The same illustration decomposed two ways, then animated by the <em>same frozen</em>
+    Stage&nbsp;2 checkpoint, driven over the same axis to the same amplitudes and cropped with one shared
+    box. Only the layer source differs, so every visible difference is decomposition error propagating
+    through an unchanged animation model &mdash; and it is in <em>motion</em> that the difference shows:
+    an under-segmented stack looks passable at rest and comes apart once it moves.</p>
+
+    <p class="lede">The reason the comparison is lopsided is structural rather than a matter of tuning.
+    See-through builds its stack on <b>human semantic segmentation</b>, so it can only separate the parts
+    its parser has categories for &mdash; head, torso, arms, legs, and a small closed set of garments. An
+    illustration is routinely not that:</p>
+    <ul class="why">
+      <li><b>Complex or layered clothing.</b> Overlapping coats, ribbons, frills, straps and armour pieces
+        collapse into one &ldquo;upper clothes&rdquo; region, so they cannot move independently.</li>
+      <li><b>Objects that are not the body.</b> A backpack, a satchel, a weapon, a plush toy, an umbrella
+        &mdash; a human parser has no class for them, so they are dropped, merged into the torso, or left
+        pinned to the background.</li>
+      <li><b>Poses that are not T- or A-pose.</b> Crossed arms, a hand raised to the face, a seated or
+        foreshortened figure: the parser's limb priors are trained on standing bodies and mislabel these.</li>
+      <li><b>Long hair and long skirts.</b> Regions that sweep far from the body get cut at the parser's
+        notion of a silhouette, which is exactly where a rig needs a separate, complete sheet in order to
+        sway.</li>
+      <li><b>Side and back views.</b> With the face absent, the parser's anchor is gone and the whole
+        assignment degrades.</li>
+    </ul>
+    <p class="lede">Our Stage&nbsp;1 does not classify body parts. It predicts an <em>ordered stack of
+    completed RGBA sheets</em> directly, so what a sheet contains never has to correspond to a human part
+    at all &mdash; a bag, a hair mass and a skirt panel are simply three sheets. That is why the failures on
+    the right are not bugs to be fixed in See-through, and why they do not appear on the left.</p>
+    <div class="cmp" id="cmpGrid"></div>
+    <p class="fn">The third-party decomposer is used as published, with no tuning by us, and was not
+    designed for rigging. This is evidence that decomposition quality dominates the end-to-end result,
+    not a claim about that method's own task.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 4. editing -->
+<section>
+  <div class="wrap">
+    <h2><span class="n">06</span>Re-texture without re-animating</h2>
+    <p class="lede">A layer's mesh is derived from its alpha channel, so repainting only the RGB of some
+    layers cannot invalidate the mesh &mdash; and therefore cannot invalidate the animation. The edited
+    rig below replays the <em>original</em> predicted displacement frames.</p>
+    <div class="peel peel3">
+      <div class="box"><div class="cap">before</div><img id="edBefore" src="edit/before_rest.webp" alt="rig before the edit"></div>
+      <div class="box"><div class="cap">after &mdash; garment layers recoloured</div><img id="edAfter" src="edit/after_rest.webp" alt="rig after the edit"></div>
+      <div class="ctl">
+        <label class="sl">pose</label>
+        <div class="row" id="edPoses" style="flex-direction:column;gap:6px"></div>
+        <div class="facts">
+          <div>mesh vertices &mdash; <b>byte-identical</b></div>
+          <div>triangle lists &mdash; <b>byte-identical</b></div>
+          <div>every predicted keypose &mdash; <b>byte-identical</b></div>
+        </div>
+      </div>
+    </div>
+    <p class="fn">This particular pair is an alpha-preserving recolour rather than a prompt-driven edit,
+    so it demonstrates the mechanism rather than the generative editing itself: the point is that the
+    posed columns are the original prediction replayed on new texture, with nothing re-run. The
+    prompt-driven edits across ten layer categories are in the paper.</p>
+  </div>
+</section>
+
+<!-- ============================================================ 5. gallery -->
+<section>
+  <div class="wrap">
+    <h2><span class="n">07</span>Every character we can show</h2>
+    <p class="lede">All rigs that pass our content filter, each at rest. <strong>Hover any tile and it animates</strong>; click to
+    enlarge and step through poses. One frozen checkpoint, one triangulation procedure and one parameter
+    sweep produced every tile.</p>
+    <div class="row" style="max-width:520px;margin-bottom:18px;align-items:center;gap:10px">
+      <div class="axes" id="galSort" style="margin:0">
+        <button data-k="motion" aria-selected="true">by motion</button>
+        <button data-k="layers">by layer count</button>
+        <button data-k="name">by name</button>
+        <button data-k="apose">A-pose only</button>
+      </div>
+      <span class="badge" id="galCount"></span>
+    </div>
+    <p class="lede" style="margin-top:0">Move the pointer across a tile to pose that character &mdash;
+    left is rest, right is the largest pose it holds together. Click to enlarge.</p>
+    <div class="gal" id="galGrid"></div>
+  </div>
+</section>
+
+<!-- ============================================================ 6. numbers -->
+
+
+<!-- ============================================================ citation -->
+<section id="citeSection">
+  <div class="wrap">
+    <h2><span class="n">08</span>Cite</h2>
+    <div class="citebox">
+      <button class="btn cpbtn" id="citeCopy" type="button">copy</button>
+      <pre id="citeText">@misc{chen2026bunrakuturningsingleillustration,
+      title={Bunraku: Turning a Single Illustration into an Editable Live2D Character}, 
+      author={Junhao Chen and Jingjia Mao and Dayong Li and Chenghai Li and Saining Zhang and Zhihao Li and Hao Zhao and Yufei Wang and Ruqi Huang},
+      year={2026},
+      eprint={2607.27348},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2607.27348}, 
+}</pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="cta">
+      <p class="ctak">Read the paper, or take the code</p>
+      <h3 class="ctat">Bunraku</h3>
+      <p class="ctas">Turning a Single Illustration into an Editable Live2D Character</p>
+      <div class="ctarow">
+        <a class="cbtn pri" href="https://arxiv.org/abs/2607.27348" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l6 6v14H6z" fill="none"
+            stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 2v6h6"
+            fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path
+            d="M9 13h6M9 17h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          <span><b>Read the paper</b><small>arXiv:2607.27348</small></span></a>
+        <a class="cbtn" href="https://github.com/SparcAI-Inc/Bunraku" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.48 2 2 6.58 2
+            12.23c0 4.51 2.87 8.34 6.84 9.69.5.09.68-.22.68-.49v-1.7c-2.78.62-3.37-1.37-3.37-1.37-.45-1.18
+            -1.11-1.5-1.11-1.5-.91-.64.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85
+            .09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.05 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3
+            .1-2.7 0 0 .84-.27 2.75 1.05a9.4 9.4 0 0 1 5 0c1.91-1.32 2.75-1.05 2.75-1.05.55 1.4.2 2.44.1
+            2.7.64.72 1.03 1.63 1.03 2.75 0 3.92-2.34 4.78-4.57 5.04.36.32.68.94.68 1.9v2.82c0 .27.18.58
+            .69.48A10.02 10.02 0 0 0 22 12.23C22 6.58 17.52 2 12 2z"/></svg>
+          <span><b>Get the code</b><small>github.com/SparcAI-Inc/Bunraku</small></span></a>
+      </div>
+    </div>
+    <p class="fine">Frames are rendered from the generated rigs by the same viewer used for the paper's
+    figures. A number of characters are withheld under a content filter, which is why the gallery count is
+    smaller than the corpus. Source illustrations are used for research demonstration; rights remain with
+    their respective creators.</p>
+  </div>
+</footer>
+
+<div id="lb"><div class="in">
+  <img id="lbImg" alt="">
+  <div class="strip" id="lbStrip"></div>
+  <div class="cp" id="lbCap"></div>
+</div></div>
+
+<script src="data/manifest.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
