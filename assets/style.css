@@ -579,3 +579,43 @@ h2{letter-spacing:-.018em}
   .authors a.ahome:hover{color:var(--ours);border-bottom-color:var(--ours)}
 }
 .authors a.ahome:active{color:var(--ours)}
+
+/* ---------- "seeking" callouts ----------
+   A gradient pill sitting above the name, and the name itself shaking, so the notice is impossible to miss
+   in a byline of nine.
+
+   The row reserves headroom via padding-top with an equal negative margin, so the badge can sit above the
+   name without pushing the author list down or overlapping the subtitle.
+
+   The shake runs continuously, which is a deliberate exception to this page's own rule about not animating
+   what a reader sees the whole time -- it is a recruitment notice and its job is to catch the eye. It is
+   still dropped entirely under prefers-reduced-motion, where continuous motion is not a style choice but an
+   accessibility problem; the badge stays, so no information is lost. */
+.au.seeking{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;margin-right:4px}
+/* The badge sits INLINE before the name, not centred above it. Above-the-name is what the reference does,
+   but it only works when the tagged authors are far apart in the list: ours are the first two, side by
+   side, and two pills each wider than the name they label overlapped each other. */
+.au.seeking .callout{border-radius:999px;padding:5px 9px;white-space:nowrap;
+  font:800 9.5px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:#fff;
+  background:linear-gradient(135deg,#ff7a18 0%,#ff3d54 100%);
+  box-shadow:0 6px 16px rgba(255,61,84,.30)}
+.au.seeking .callout.job{background:linear-gradient(135deg,#1f9d55 0%,#0f7a86 100%);
+  box-shadow:0 6px 16px rgba(15,122,134,.28)}
+.au.seeking .shake{display:inline-block;transform-origin:50% 60%;
+  animation:seekShake .36s linear infinite}
+@keyframes seekShake{
+  0%{transform:translate3d(0,0,0) rotate(0deg) scale(1)}
+  20%{transform:translate3d(-1.4px,.9px,0) rotate(-.8deg) scale(1.01)}
+  40%{transform:translate3d(1.2px,-1.1px,0) rotate(.8deg) scale(.995)}
+  60%{transform:translate3d(-1.1px,-.7px,0) rotate(-.6deg) scale(1.008)}
+  80%{transform:translate3d(1.4px,.5px,0) rotate(.6deg) scale(1.002)}
+  100%{transform:translate3d(0,0,0) rotate(0deg) scale(1)}
+}
+@media (prefers-reduced-motion:reduce){
+  .au.seeking .shake{animation:none}
+}
+@media (max-width:600px){
+  .au.seeking{gap:5px}
+  .au.seeking .callout{font-size:8px;padding:4px 7px}
+  .authors{gap:6px 12px}
+}
