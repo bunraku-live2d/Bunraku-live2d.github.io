@@ -1282,7 +1282,7 @@ function buildCite() {
 function fitCallouts() {
   $$('.au.seeking').forEach(au => {
     const pill = $('.callout', au);
-    const name = $('.shake', au);
+    const name = $('a, .nm', au) || au.lastElementChild;
     if (!pill || !name) return;
     au.style.setProperty('--oh', '0px');
     const pw = pill.getBoundingClientRect().width;

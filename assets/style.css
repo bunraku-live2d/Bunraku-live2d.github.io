@@ -615,7 +615,12 @@ h2{letter-spacing:-.018em}
   box-shadow:0 6px 16px rgba(255,61,84,.30)}
 .au.seeking .callout.job{background:linear-gradient(135deg,#1f9d55 0%,#0f7a86 100%);
   box-shadow:0 6px 16px rgba(15,122,134,.28)}
-.au.seeking .shake{display:inline-block;transform-origin:50% 60%;
+/* The PILL shakes, not the name.
+   The animation lives on an inner span rather than on .callout itself: .callout already owns a transform
+   (translate(-50%,-100%)) to centre it above the name, and an animation on the same element would replace
+   that transform outright and drop the pill out of position. Separating positioning from motion is the only
+   way these two can coexist. */
+.au.seeking .cin{display:inline-block;transform-origin:50% 55%;
   animation:seekShake .36s linear infinite}
 @keyframes seekShake{
   0%{transform:translate3d(0,0,0) rotate(0deg) scale(1)}
