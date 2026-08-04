@@ -594,11 +594,22 @@ h2{letter-spacing:-.018em}
    what a reader sees the whole time -- it is a recruitment notice and its job is to catch the eye. It is
    still dropped entirely under prefers-reduced-motion, where continuous motion is not a style choice but an
    accessibility problem; the badge stays, so no information is lost. */
-.au.seeking{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;margin-right:4px}
-/* The badge sits INLINE before the name, not centred above it. Above-the-name is what the reference does,
-   but it only works when the tagged authors are far apart in the list: ours are the first two, side by
-   side, and two pills each wider than the name they label overlapped each other. */
-.au.seeking .callout{border-radius:999px;padding:5px 9px;white-space:nowrap;
+/* ---------- "seeking" callouts ----------
+   A FLOATING pill centred above the name, as on lottiegpt.github.io: the wrapper reserves headroom with
+   padding-top plus an equal negative margin, so the badge occupies space that costs the layout nothing, and
+   the pill is absolutely positioned out of flow at top:0 / translate(-50%,-100%).
+
+   The reference can leave it at that because its two tagged authors sit far apart in the list. Ours are the
+   FIRST TWO, side by side, and each pill is wider than the name it labels -- centred, they overlapped, and
+   the first one rendered as "SEEKING 27 FALL P...". So each tagged author reserves horizontal room equal to
+   its own overhang (--oh), which is what keeps the two pills apart without moving them off centre. */
+.authors{padding-top:30px}
+.au.seeking{position:relative;display:inline-block;vertical-align:top;
+  padding-top:26px;margin-top:-26px;
+  /* half the amount the pill sticks out past the name, on each side */
+  margin-left:var(--oh,20px);margin-right:var(--oh,20px)}
+.au.seeking .callout{position:absolute;top:0;left:var(--cx,50%);transform:translate(-50%,-100%);
+  border-radius:999px;padding:5px 10px;white-space:nowrap;z-index:2;
   font:800 9.5px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:#fff;
   background:linear-gradient(135deg,#ff7a18 0%,#ff3d54 100%);
   box-shadow:0 6px 16px rgba(255,61,84,.30)}
@@ -618,7 +629,7 @@ h2{letter-spacing:-.018em}
   .au.seeking .shake{animation:none}
 }
 @media (max-width:600px){
-  .au.seeking{gap:5px}
   .au.seeking .callout{font-size:8px;padding:4px 7px}
-  .authors{gap:6px 12px}
+  .au.seeking{margin-left:var(--oh,14px);margin-right:var(--oh,14px)}
+  .authors{gap:8px 12px;padding-top:28px}
 }

@@ -1276,6 +1276,25 @@ function buildCite() {
   };
 }
 
+/* The floating pills are centred on their names and are wider than them, so adjacent tagged authors would
+ * overlap. Reserve exactly the overhang each pill actually has -- measured after layout, because it depends
+ * on the font the visitor's system resolves, not on a number we can hardcode. */
+function fitCallouts() {
+  $$('.au.seeking').forEach(au => {
+    const pill = $('.callout', au);
+    const name = $('.shake', au);
+    if (!pill || !name) return;
+    au.style.setProperty('--oh', '0px');
+    const pw = pill.getBoundingClientRect().width;
+    const nb = name.getBoundingClientRect(), ab = au.getBoundingClientRect();
+    au.style.setProperty('--oh', `${Math.max(0, Math.ceil((pw - nb.width) / 2) + 6)}px`);
+    // centre on the NAME, not on the wrapper: the wrapper also contains the affiliation superscript, so
+    // left:50% lands about half a superscript to the right of the name's own centre
+    const ab2 = au.getBoundingClientRect(), nb2 = name.getBoundingClientRect();
+    au.style.setProperty('--cx', `${Math.round(nb2.left - ab2.left + nb2.width / 2)}px`);
+  });
+}
+
 /* ------------------------------------------------------------------ lightbox */
 function lightbox(src, cap, strip, labels) {
   const lb = $('#lb');
@@ -1299,6 +1318,8 @@ document.addEventListener('DOMContentLoaded', () => {
   buildHero(); buildExplorer(); buildFeatured(); buildApose(); buildTrack(); buildPeel();
   buildExplode(); buildCompare(); buildEdit(); buildGallery();
   buildReveal(); buildRotations(); buildCite();
+  fitCallouts();
+  window.addEventListener('resize', fitCallouts);
   $('#lb').onclick = () => $('#lb').classList.remove('on');
   document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#lb').classList.remove('on'); });
   $('#nchar').textContent = D.gallery.length;
