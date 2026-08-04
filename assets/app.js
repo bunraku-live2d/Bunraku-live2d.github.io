@@ -1281,7 +1281,7 @@ function buildCite() {
  * on the font the visitor's system resolves, not on a number we can hardcode. */
 function fitCallouts() {
   $$('.au.seeking').forEach(au => {
-    const pill = $('.callout', au);
+    const pill = $('.cin', au) || $('.callout', au);
     const name = $('a, .nm', au) || au.lastElementChild;
     if (!pill || !name) return;
     au.style.setProperty('--oh', '0px');
