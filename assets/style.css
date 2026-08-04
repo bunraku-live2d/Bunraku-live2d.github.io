@@ -578,6 +578,9 @@ h2{letter-spacing:-.018em}
 @media (hover:hover) and (pointer:fine){
   .authors a.ahome:hover{color:var(--ours);border-bottom-color:var(--ours)}
 }
+/* the browser shows the destination in the status bar, but a title makes the KIND of link explicit --
+   one opens a homepage, the other opens a mail client, and those are not interchangeable */
+.authors a[href^="mailto:"]{cursor:pointer}
 .authors a.ahome:active{color:var(--ours)}
 
 /* ---------- "seeking" callouts ----------
