@@ -603,19 +603,20 @@ h2{letter-spacing:-.018em}
    FIRST TWO, side by side, and each pill is wider than the name it labels -- centred, they overlapped, and
    the first one rendered as "SEEKING 27 FALL P...". So each tagged author reserves horizontal room equal to
    its own overhang (--oh), which is what keeps the two pills apart without moving them off centre. */
-.authors{padding-top:30px}
+/* ---------- "seeking" callouts ----------
+   A floating pill above the name, joined to it by a coiled connector.
+
+   Geometry is reserved on the wrapper (padding-top with an equal negative margin) so the whole assembly --
+   pill, coil, name -- costs the layout nothing and cannot push the byline around. The pill is pinned to the
+   TOP of that reserved band and the coil fills the space between pill and name, both sized from measurement
+   in fitCallouts() because they depend on the pill's rendered width and the resolved font. */
+.authors{padding-top:64px}
 .au.seeking{position:relative;display:inline-block;vertical-align:top;
-  padding-top:26px;margin-top:-26px;
-  /* half the amount the pill sticks out past the name, on each side */
+  padding-top:var(--band,56px);margin-top:calc(-1 * var(--band,56px));
   margin-left:var(--oh,20px);margin-right:var(--oh,20px)}
-/* .callout is a POSITIONING WRAPPER only -- no background, no padding. The visible pill is .cin, and the
-   shake lives on .cin.
-   The previous version had it the other way round: the pill body was .callout and only its text animated,
-   so the badge sat perfectly still while 9.5px letters jiggled inside it by a pixel. Invisible in practice,
-   even though the animation was genuinely running -- which is what my measurement confirmed, because I was
-   sampling the transform of the text rather than the movement of the badge. */
-.au.seeking .callout{position:absolute;top:0;left:var(--cx,50%);transform:translate(-50%,-100%);
-  z-index:2;white-space:nowrap;line-height:0}
+
+.au.seeking .callout{position:absolute;top:0;left:var(--cx,50%);transform:translate(-50%,0);
+  z-index:3;white-space:nowrap;line-height:0}
 .au.seeking .cin{display:inline-block;transform-origin:50% 55%;
   border-radius:999px;padding:5px 10px;white-space:nowrap;
   font:800 9.5px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:#fff;
@@ -624,6 +625,19 @@ h2{letter-spacing:-.018em}
   animation:seekShake .34s linear infinite}
 .au.seeking .callout.job .cin{background:linear-gradient(135deg,#1f9d55 0%,#0f7a86 100%);
   box-shadow:0 6px 16px rgba(15,122,134,.28)}
+
+/* the coil. stroke-dashoffset animates, so the line reads as flowing from the badge toward the name --
+   direction carries the meaning "this label belongs to that person" */
+.au.seeking .tether{position:absolute;left:var(--cx,50%);transform:translateX(-50%);
+  top:var(--tethertop,22px);z-index:1;overflow:visible;pointer-events:none}
+.au.seeking .tether{--tint:#ff5a36}
+/* the tint is set on the SVG, not on the path: the terminal dot is a SIBLING of the path, so a custom
+   property declared on the path never reached it and the green badge got an orange dot */
+.au.seeking .tether.job{--tint:#12868b}
+.au.seeking .tether path{fill:none;stroke:var(--tint);stroke-width:1.8;stroke-linecap:round;
+  stroke-dasharray:5 4;animation:dashFlow .7s linear infinite}
+.au.seeking .tether circle{fill:var(--tint)}
+@keyframes dashFlow{from{stroke-dashoffset:0}to{stroke-dashoffset:-18}}
 @keyframes seekShake{
   0%{transform:translate3d(0,0,0) rotate(0deg) scale(1)}
   20%{transform:translate3d(-2.6px,1.6px,0) rotate(-1.8deg) scale(1.03)}
@@ -633,7 +647,8 @@ h2{letter-spacing:-.018em}
   100%{transform:translate3d(0,0,0) rotate(0deg) scale(1)}
 }
 @media (prefers-reduced-motion:reduce){
-  .au.seeking .shake{animation:none}
+  .au.seeking .cin{animation:none}
+  .au.seeking .tether path{animation:none}
 }
 @media (max-width:600px){
   .au.seeking .cin{font-size:8px;padding:4px 7px}

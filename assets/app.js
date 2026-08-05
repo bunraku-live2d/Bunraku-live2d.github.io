@@ -1276,22 +1276,61 @@ function buildCite() {
   };
 }
 
-/* The floating pills are centred on their names and are wider than them, so adjacent tagged authors would
- * overlap. Reserve exactly the overhang each pill actually has -- measured after layout, because it depends
- * on the font the visitor's system resolves, not on a number we can hardcode. */
+/* The floating pills are centred on their names, joined by a coiled connector.
+ *
+ * All of it is measured rather than hardcoded: the pill's width depends on the font the visitor's system
+ * resolves, so the horizontal room each tagged author must reserve (--oh) and the pill's centre (--cx) can
+ * only be known after layout. Recomputed on resize.
+ *
+ * The coil is generated as a spring seen edge-on -- alternating half-circles descending from the pill's
+ * bottom edge to the top of the name. A plain curve would read as a stray stroke; a coil reads as a cord,
+ * which is the point: it says the label is attached to this person. */
+function coilPath(h, r, loops) {
+  // start at the top, centred; each loop is two half-circles, so the coil descends 2*dy per loop
+  const dy = h / (loops * 2);
+  let d = `M 0 0`;
+  for (let i = 0; i < loops; i++) {
+    d += ` c ${r} 0 ${r} ${dy} 0 ${dy}`;      // bulge right, drop
+    d += ` c ${-r} 0 ${-r} ${dy} 0 ${dy}`;     // bulge left, drop
+  }
+  return d;
+}
+
 function fitCallouts() {
   $$('.au.seeking').forEach(au => {
-    const pill = $('.cin', au) || $('.callout', au);
-    const name = $('a, .nm', au) || au.lastElementChild;
-    if (!pill || !name) return;
+    const pill = $('.cin', au);
+    const wrap = $('.callout', au);
+    const name = $('a', au) || au.lastElementChild;
+    if (!pill || !name || !wrap) return;
     au.style.setProperty('--oh', '0px');
     const pw = pill.getBoundingClientRect().width;
-    const nb = name.getBoundingClientRect(), ab = au.getBoundingClientRect();
+    const nb = name.getBoundingClientRect();
+    // horizontal room equal to the pill's overhang past the name, so adjacent badges cannot collide
     au.style.setProperty('--oh', `${Math.max(0, Math.ceil((pw - nb.width) / 2) + 6)}px`);
-    // centre on the NAME, not on the wrapper: the wrapper also contains the affiliation superscript, so
-    // left:50% lands about half a superscript to the right of the name's own centre
-    const ab2 = au.getBoundingClientRect(), nb2 = name.getBoundingClientRect();
-    au.style.setProperty('--cx', `${Math.round(nb2.left - ab2.left + nb2.width / 2)}px`);
+    // centre on the NAME: the wrapper also holds the affiliation superscript
+    const ab = au.getBoundingClientRect(), nb2 = name.getBoundingClientRect();
+    au.style.setProperty('--cx', `${Math.round(nb2.left - ab.left + nb2.width / 2)}px`);
+
+    const pillH = Math.round(pill.getBoundingClientRect().height);
+    const band = Math.round(nb2.top - ab.top);              // pill top .. name top
+    const gap = Math.max(10, band - pillH - 2);             // room the coil has to fill
+    au.style.setProperty('--tethertop', `${pillH}px`);
+
+    let svg = $('.tether', au);
+    if (!svg) {
+      svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'tether' + (wrap.classList.contains('job') ? ' job' : ''));
+      svg.innerHTML = '<path></path><circle r="2.1"></circle>';
+      au.insertBefore(svg, wrap.nextSibling);
+    }
+    const r = 5.2, loops = 2;
+    svg.setAttribute('width', String(r * 2 + 6));
+    svg.setAttribute('height', String(gap));
+    svg.setAttribute('viewBox', `${-r - 3} -1 ${r * 2 + 6} ${gap + 2}`);
+    $('path', svg).setAttribute('d', coilPath(gap, r, loops));
+    const dot = $('circle', svg);                            // a terminal dot where it meets the name
+    dot.setAttribute('cx', '0');
+    dot.setAttribute('cy', String(gap));
   });
 }
 
