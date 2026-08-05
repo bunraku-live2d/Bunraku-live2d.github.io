@@ -610,29 +610,33 @@ h2{letter-spacing:-.018em}
    pill, coil, name -- costs the layout nothing and cannot push the byline around. The pill is pinned to the
    TOP of that reserved band and the coil fills the space between pill and name, both sized from measurement
    in fitCallouts() because they depend on the pill's rendered width and the resolved font. */
-.authors{padding-top:64px}
-.au.seeking{position:relative;display:inline-block;vertical-align:top;
-  padding-top:var(--band,56px);margin-top:calc(-1 * var(--band,56px));
-  margin-left:var(--oh,20px);margin-right:var(--oh,20px)}
+/* ---------- "seeking" callouts ----------
+   The card sits at the name's UPPER-RIGHT and close to it, joined by a short coil that drops from the card's
+   lower-left to the name's top-right corner.
 
-.au.seeking .callout{position:absolute;top:0;left:var(--cx,50%);transform:translate(-50%,0);
+   Anchoring right rather than centring changes what has to be reserved: a centred card overhangs both sides
+   by half its excess width, but a right-anchored one extends entirely PAST the name, so the room goes on the
+   right only -- and it is the full card width, not half. Reserved via margin-right from a measured value,
+   because the width depends on the font the visitor's system resolves. */
+.authors{padding-top:34px}
+.au.seeking{position:relative;display:inline-block;vertical-align:top;
+  padding-top:var(--band,26px);margin-top:calc(-1 * var(--band,26px));
+  margin-right:var(--room,120px)}
+
+.au.seeking .callout{position:absolute;top:0;left:var(--ax,100%);transform:none;
   z-index:3;white-space:nowrap;line-height:0}
-.au.seeking .cin{display:inline-block;transform-origin:50% 55%;
-  border-radius:999px;padding:5px 10px;white-space:nowrap;
-  font:800 9.5px/1 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:#fff;
+.au.seeking .cin{display:inline-block;transform-origin:20% 80%;
+  border-radius:999px;padding:7px 14px;white-space:nowrap;
+  font:800 9.5px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:#fff;
   background:linear-gradient(135deg,#ff7a18 0%,#ff3d54 100%);
   box-shadow:0 6px 16px rgba(255,61,84,.30);
   animation:seekShake .34s linear infinite}
 .au.seeking .callout.job .cin{background:linear-gradient(135deg,#1f9d55 0%,#0f7a86 100%);
   box-shadow:0 6px 16px rgba(15,122,134,.28)}
 
-/* the coil. stroke-dashoffset animates, so the line reads as flowing from the badge toward the name --
-   direction carries the meaning "this label belongs to that person" */
-.au.seeking .tether{position:absolute;left:var(--cx,50%);transform:translateX(-50%);
-  top:var(--tethertop,22px);z-index:1;overflow:visible;pointer-events:none}
-.au.seeking .tether{--tint:#ff5a36}
-/* the tint is set on the SVG, not on the path: the terminal dot is a SIBLING of the path, so a custom
-   property declared on the path never reached it and the green badge got an orange dot */
+/* the coil: short now, because the card is close. Drops from the card's lower-left to the name's top-right */
+.au.seeking .tether{--tint:#ff5a36;position:absolute;left:var(--tx,100%);top:var(--ty,18px);
+  z-index:1;overflow:visible;pointer-events:none}
 .au.seeking .tether.job{--tint:#12868b}
 .au.seeking .tether path{fill:none;stroke:var(--tint);stroke-width:1.8;stroke-linecap:round;
   stroke-dasharray:5 4;animation:dashFlow .7s linear infinite}
@@ -651,7 +655,6 @@ h2{letter-spacing:-.018em}
   .au.seeking .tether path{animation:none}
 }
 @media (max-width:600px){
-  .au.seeking .cin{font-size:8px;padding:4px 7px}
-  .au.seeking{margin-left:var(--oh,14px);margin-right:var(--oh,14px)}
-  .authors{gap:8px 12px;padding-top:28px}
+  .au.seeking .cin{font-size:8px;padding:6px 11px}
+  .authors{gap:8px 12px;padding-top:30px}
 }

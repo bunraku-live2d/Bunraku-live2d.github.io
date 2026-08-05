@@ -1286,49 +1286,62 @@ function buildCite() {
  * bottom edge to the top of the name. A plain curve would read as a stray stroke; a coil reads as a cord,
  * which is the point: it says the label is attached to this person. */
 function coilPath(h, r, loops) {
-  // start at the top, centred; each loop is two half-circles, so the coil descends 2*dy per loop
   const dy = h / (loops * 2);
-  let d = `M 0 0`;
+  let d = 'M 0 0';
   for (let i = 0; i < loops; i++) {
-    d += ` c ${r} 0 ${r} ${dy} 0 ${dy}`;      // bulge right, drop
-    d += ` c ${-r} 0 ${-r} ${dy} 0 ${dy}`;     // bulge left, drop
+    d += ` c ${r} 0 ${r} ${dy} 0 ${dy}`;
+    d += ` c ${-r} 0 ${-r} ${dy} 0 ${dy}`;
   }
   return d;
 }
 
+/* Place each card at its name's upper-right, close to it, and coil the two together.
+ *
+ * Every value is measured after layout rather than hardcoded: the card's width depends on the font the
+ * visitor's system resolves, and it determines both where the card sits and how much room the byline must
+ * reserve so the card does not land on top of the NEXT author's name. Recomputed on resize. */
 function fitCallouts() {
   $$('.au.seeking').forEach(au => {
     const pill = $('.cin', au);
     const wrap = $('.callout', au);
     const name = $('a', au) || au.lastElementChild;
     if (!pill || !name || !wrap) return;
-    au.style.setProperty('--oh', '0px');
-    const pw = pill.getBoundingClientRect().width;
-    const nb = name.getBoundingClientRect();
-    // horizontal room equal to the pill's overhang past the name, so adjacent badges cannot collide
-    au.style.setProperty('--oh', `${Math.max(0, Math.ceil((pw - nb.width) / 2) + 6)}px`);
-    // centre on the NAME: the wrapper also holds the affiliation superscript
-    const ab = au.getBoundingClientRect(), nb2 = name.getBoundingClientRect();
-    au.style.setProperty('--cx', `${Math.round(nb2.left - ab.left + nb2.width / 2)}px`);
 
-    const pillH = Math.round(pill.getBoundingClientRect().height);
-    const band = Math.round(nb2.top - ab.top);              // pill top .. name top
-    const gap = Math.max(10, band - pillH - 2);             // room the coil has to fill
-    au.style.setProperty('--tethertop', `${pillH}px`);
+    const nb = name.getBoundingClientRect(), ab = au.getBoundingClientRect();
+    /* offsetWidth/Height, NOT getBoundingClientRect: the pill is mid-shake, and a bounding rect includes the
+       live transform, so measuring it fed the animation's own scale and rotation back into the layout --
+       the coil came out 8px inside an 18px gap and jittered. Layout metrics are transform-independent. */
+    const pw = pill.offsetWidth, ph = pill.offsetHeight;
+    const nameRight = nb.right - ab.left;
+    const OVERLAP = 10;          // the card starts slightly inside the name's right edge, so the two read as attached
+    const GAP = 15;              // vertical air: close to the name, but a coil needs SOME run to read as a coil
+
+    au.style.setProperty('--band', `${ph + GAP}px`);
+    au.style.setProperty('--ax', `${Math.round(nameRight - OVERLAP)}px`);
+    // a right-anchored card extends entirely past the name, so reserve its FULL width on the right
+    au.style.setProperty('--room', `${Math.max(0, pw - OVERLAP + 14)}px`);
+
+    // the coil fills exactly the band we reserved, so it always meets both ends
+    const gap = GAP;
+    au.style.setProperty('--tx', `${Math.round(nameRight - OVERLAP + 7)}px`);
+    au.style.setProperty('--ty', `${ph}px`);
 
     let svg = $('.tether', au);
     if (!svg) {
       svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('class', 'tether' + (wrap.classList.contains('job') ? ' job' : ''));
-      svg.innerHTML = '<path></path><circle r="2.1"></circle>';
+      svg.innerHTML = '<path></path><circle r="2"></circle>';
       au.insertBefore(svg, wrap.nextSibling);
     }
-    const r = 5.2, loops = 2;
+    /* Loop count follows the space available. Two loops crammed into an 11px drop rendered as a smudge
+       rather than a cord -- the curve needs roughly 11px of run per loop to be legible. */
+    const loops = gap >= 26 ? 2 : 1;
+    const r = loops === 1 ? 5.6 : 4.6;
     svg.setAttribute('width', String(r * 2 + 6));
     svg.setAttribute('height', String(gap));
     svg.setAttribute('viewBox', `${-r - 3} -1 ${r * 2 + 6} ${gap + 2}`);
     $('path', svg).setAttribute('d', coilPath(gap, r, loops));
-    const dot = $('circle', svg);                            // a terminal dot where it meets the name
+    const dot = $('circle', svg);
     dot.setAttribute('cx', '0');
     dot.setAttribute('cy', String(gap));
   });
